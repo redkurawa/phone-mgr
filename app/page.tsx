@@ -635,7 +635,7 @@ export default function Home() {
   const fetchPhoneHistory = async (phoneId: string) => {
     try {
       console.log('Frontend: Fetching history for phone:', phoneId);
-      const res = await fetch(`/api/phones/${phoneId}/history`, {
+      const res = await fetch(`/api/phones/${phoneId}/history?_=${Date.now()}`, {
         cache: 'no-store',
       });
       console.log('Frontend: Fetch response status:', res.status);

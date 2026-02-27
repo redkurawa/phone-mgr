@@ -29,32 +29,33 @@ export async function GET(
 
     console.log('Fetching history for phone:', phoneId);
 
-    // Debug: check raw query
-    const debugRaw = await db.execute(
-      sql`SELECT id, event_date FROM usage_history WHERE phone_id = ${phoneId} ORDER BY event_date DESC LIMIT 5`
+    // Use raw SQL to avoid drizzle caching issues
+    const limitNum = parseInt(limit.toString());
+    const offsetNum = parseInt(offset.toString());
+    const historyResult = await db.execute(
+      sql`SELECT id, phone_id, event_type, client_name, event_date, notes 
+           FROM usage_history 
+           WHERE phone_id = ${phoneId}
+           ORDER BY event_date DESC 
+           LIMIT ${limitNum} OFFSET ${offsetNum}`
     );
-    console.log('DEBUG raw:', JSON.stringify(debugRaw.rows));
-
-    // Get paginated history
-    const history = await db
-      .select()
-      .from(usageHistory)
-      .where(eq(usageHistory.phoneId, phoneId))
-      .orderBy(usageHistory.eventDate)
-      .limit(limit)
-      .offset(offset);
-
-    console.log('History fetched:', history.length, 'entries');
+    
+    const history = historyResult.rows.map((row: any) => ({
+      id: row.id,
+      phoneId: row.phone_id,
+      eventType: row.event_type,
+      clientName: row.client_name,
+      eventDate: row.event_date,
+      notes: row.notes,
+    }));
 
     // Get total count
-    const countResult = await db
-      .select({
-        count: usageHistory.id,
-      })
-      .from(usageHistory)
-      .where(eq(usageHistory.phoneId, phoneId));
+    const countResult = await db.execute(
+      sql`SELECT COUNT(*) as count FROM usage_history WHERE phone_id = ${phoneId}`
+    );
+    const total = parseInt((countResult.rows[0] as any)?.count || '0');
 
-    const total = countResult.length;
+    console.log('History fetched:', history.length, 'entries');
 
     return NextResponse.json(
       {

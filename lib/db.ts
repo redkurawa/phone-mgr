@@ -68,4 +68,6 @@ export const usageHistoryRelations = relations(usageHistory, ({ one }) => ({
 // Database connection
 const connectionString = process.env.DATABASE_URL || '';
 const sql = connectionString ? neon(connectionString) : null;
-export const db = sql ? drizzle(sql) : null;
+export const db = sql ? drizzle(sql, { 
+  logger: false,
+}) : null;

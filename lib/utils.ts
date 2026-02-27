@@ -1,6 +1,28 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
+}
+
+export function formatDate(date: Date | string): string {
+  const d = new Date(date);
+  const months = [
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'mei',
+    'jun',
+    'jul',
+    'agu',
+    'sep',
+    'okt',
+    'nov',
+    'des',
+  ];
+  const day = d.getDate();
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
 }

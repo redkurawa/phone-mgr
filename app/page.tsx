@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { formatDate } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -1109,8 +1110,7 @@ export default function Home() {
                     </div>
                     {!phone.isActive && phone.returnDate && (
                       <div className='text-sm text-muted-foreground'>
-                        Returned:{' '}
-                        {new Date(phone.returnDate).toLocaleDateString()}
+                        Returned: {formatDate(phone.returnDate)}
                       </div>
                     )}
                   </div>
@@ -1272,9 +1272,7 @@ export default function Home() {
                             <span>Total: {block.total}</span>
                             <span className='flex items-center gap-1'>
                               {block.activationDate
-                                ? new Date(
-                                    block.activationDate
-                                  ).toLocaleDateString()
+                                ? formatDate(block.activationDate)
                                 : 'No activation date'}
                               {isAdmin && (
                                 <Button

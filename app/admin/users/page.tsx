@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { formatDate } from '@/lib/utils';
 
 interface User {
   id: string;
@@ -186,7 +187,7 @@ export default function UserManagementPage() {
                         {user.email}
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {new Date(user.created_at).toLocaleDateString()}
+                        {formatDate(user.created_at)}
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2'>
                         <button
@@ -291,7 +292,7 @@ export default function UserManagementPage() {
                         </select>
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {new Date(user.created_at).toLocaleDateString()}
+                        {formatDate(user.created_at)}
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
                         {user.id !== session?.user?.id && (
@@ -371,7 +372,7 @@ export default function UserManagementPage() {
                         {user.email}
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-400'>
-                        {new Date(user.created_at).toLocaleDateString()}
+                        {formatDate(user.created_at)}
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
                         <button

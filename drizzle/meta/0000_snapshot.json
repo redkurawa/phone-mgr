@@ -1,0 +1,132 @@
+{
+  "version": "1",
+  "dialect": "postgresql",
+  "tables": {
+    "phone_numbers": {
+      "name": "phone_numbers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "default": "gen_random_uuid()"
+        },
+        "number": {
+          "name": "number",
+          "type": "text",
+          "notNull": true
+        },
+        "current_status": {
+          "name": "current_status",
+          "type": "status",
+          "notNull": true,
+          "default": "'KOSONG'"
+        },
+        "current_client": {
+          "name": "current_client",
+          "type": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "phone_numbers_number_unique": {
+          "name": "phone_numbers_number_unique",
+          "columns": [
+            "number"
+          ]
+        }
+      }
+    },
+    "usage_history": {
+      "name": "usage_history",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "default": "gen_random_uuid()"
+        },
+        "phone_id": {
+          "name": "phone_id",
+          "type": "uuid",
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "event_type",
+          "notNull": true
+        },
+        "client_name": {
+          "name": "client_name",
+          "type": "text"
+        },
+        "event_date": {
+          "name": "event_date",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "usage_history_phone_id_fkey": {
+          "name": "usage_history_phone_id_fkey",
+          "columns": [
+            "phone_id"
+          ],
+          "referencedTable": "phone_numbers",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {
+    "status": {
+      "name": "status",
+      "values": [
+        "KOSONG",
+        "PAKAI"
+      ]
+    },
+    "event_type": {
+      "name": "event_type",
+      "values": [
+        "ACTIVATION",
+        "ASSIGNED",
+        "DEASSIGNED",
+        "REASSIGNED"
+      ]
+    }
+  },
+  "schemas": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

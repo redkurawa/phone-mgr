@@ -1,0 +1,49 @@
+desain menarik profesional, modern, minimalis dengan theme warna stone dari shadcn, tidak suka warna warni meriah
+memakai database neon, dan akan di deploy divercel
+
+
+contoh blok number yang per 100 number
+
+03612812XX => 0361281200 - 0361281299
+02743720XX => 0274372000 - 0274372099
+027428805XX => 02742880500  02742880599
+021292630XX => 02129263000 - 02129263099
+041189983XX => 04118998300 - 04118998399
+07783211XX => 0778321100 - 0778321199
+
+contoh manual range, tidak 100 number 
+02125617900  - 02125617949 , ditulis 021256179XX 
+
+saat assign blok number, tanggal di catat sebagai aktivasi
+
+hati2 penulisan blok numbernya, terutama angka 0 yang hilang di awal penulisan, karena awalnya string ganti ke number.
+
+mudah penggunaan, karena nanti ada lebih dari 5000 nomer yang akan di manage.
+
+mudah dalam pencarian nomer individual atau dalam blok number, dapat juga mencari dari nama klient
+
+mudah melihat nomer mana saja yang sudah di pakai, dan belum
+
+1 klient dapat memakai lebih dari 1 nomer, jadi butuh bulk number assignment
+
+klient yang menyewa banyak nomer, bisa mengurangi 1 atau lebih nomer yang disewa, atau semua nomer di kembalikan semua
+
+edit: 
+- tanggal aktivasi
+- tanggal assign nomer ke klient
+- tanggal de assign dari klient
+- nama klient
+
+edit bisa single atau bulk number
+
+Lanjutkan implementasi Google OAuth authentication untuk project Phone Number Manager. Ikuti rencana di plans/authentication-plan.md. Tambahkan:
+1. Users table di drizzle/schema.ts
+2. NextAuth.js configuration
+3. Login page dengan Google sign-in
+4. Role-based access (admin/user)
+5. User management page
+6. Approval system untuk user baru
+
+
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzcxNjk1MzI0LCJleHAiOjE3NzIzMDAxMjR9.AhcNAtdofgbecsF4c3VT_eX77AMHtAUjaH5_S-yp0a0

@@ -1,0 +1,13 @@
+{
+  "version": "1",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "1",
+      "when": 0,
+      "tag": "0000_tiny_lethal_legion",
+      "breakpoints": true
+    }
+  ]
+}

@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(
     request: Request,
     { params }: { params: { id: string } }

@@ -1,0 +1,13 @@
+cek kenapa tanggal di vercel dan localhost. di localhost 14 Agu 2018, 07:00 di vercel 27 Feb 2026, 15:49
+padaha di ambil dari database yang sama
+
+localhost:3000
+History - 02150842750
+Dipakai MCC 14 Agu 2018, 07:00
+
+https://phone-db.vercel.app/
+History - 02150842750
+Dipakai MCC 27 Feb 2026, 15:49
+
+
+

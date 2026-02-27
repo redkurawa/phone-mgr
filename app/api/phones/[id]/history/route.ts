@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, usageHistory } from '@/lib/db';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
@@ -28,6 +28,12 @@ export async function GET(
     const offset = parseInt(searchParams.get('offset') || '0');
 
     console.log('Fetching history for phone:', phoneId);
+
+    // Debug: check raw query
+    const debugRaw = await db.execute(
+      sql`SELECT id, event_date FROM usage_history WHERE phone_id = ${phoneId} ORDER BY event_date DESC LIMIT 5`
+    );
+    console.log('DEBUG raw:', JSON.stringify(debugRaw.rows));
 
     // Get paginated history
     const history = await db

@@ -50,3 +50,17 @@ export function formatDateTime(date: Date | string): string {
   const minutes = d.getMinutes().toString().padStart(2, '0');
   return `${day} ${month} ${year}, ${hours}:${minutes}`;
 }
+
+export function formatDateTimeForHistory(date: Date | string): string {
+  const d = new Date(date);
+  return d
+    .toLocaleString('id-ID', {
+      timeZone: 'Asia/Jakarta',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    .replace('.', ':');
+}

@@ -231,10 +231,20 @@ export async function GET(request: NextRequest) {
           }
         });
 
-        return NextResponse.json({
-          data: phones,
-          total: phones.length,
-        });
+        return NextResponse.json(
+          {
+            data: phones,
+            total: phones.length,
+          },
+          {
+            headers: {
+              'Cache-Control':
+                'no-store, no-cache, must-revalidate, proxy-revalidate',
+              Pragma: 'no-cache',
+              Expires: '0',
+            },
+          }
+        );
       } catch (error) {
         console.error('Error fetching customer phones:', error);
         return NextResponse.json(

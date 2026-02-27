@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatDateTime } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -1607,7 +1607,7 @@ export default function Home() {
                     <div className='flex items-center gap-2 text-sm text-muted-foreground flex-shrink-0'>
                       <Calendar className='h-3 w-3 flex-shrink-0' />
                       <span className='whitespace-nowrap'>
-                        {new Date(entry.eventDate).toLocaleString()}
+                        {formatDateTime(entry.eventDate)}
                       </span>
                       {isAdmin && (
                         <Button

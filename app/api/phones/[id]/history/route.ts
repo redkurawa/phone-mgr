@@ -50,12 +50,22 @@ export async function GET(
 
     const total = countResult.length;
 
-    return NextResponse.json({
-      data: history,
-      total,
-      limit,
-      offset,
-    });
+    return NextResponse.json(
+      {
+        data: history,
+        total,
+        limit,
+        offset,
+      },
+      {
+        headers: {
+          'Cache-Control':
+            'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error fetching history:', error);
     return NextResponse.json(

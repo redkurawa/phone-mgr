@@ -12,8 +12,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { usePhoneManager } from '@/hooks/use-phone-manager';
+import { useState, useEffect } from 'react';
 
-export function AssignDialog({ manager }: { manager: ReturnType<typeof usePhoneManager> }) {
+export function AssignDialog({
+  manager,
+}: {
+  manager: ReturnType<typeof usePhoneManager>;
+}) {
   const {
     assignDialogOpen,
     setAssignDialogOpen,
@@ -25,6 +30,15 @@ export function AssignDialog({ manager }: { manager: ReturnType<typeof usePhoneM
     setAssignNotes,
     handleAssign,
   } = manager;
+
+  const [assignDate, setAssignDate] = useState('');
+
+  useEffect(() => {
+    if (assignDialogOpen) {
+      const today = new Date().toISOString().split('T')[0];
+      setAssignDate(today);
+    }
+  }, [assignDialogOpen]);
 
   return (
     <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
@@ -52,6 +66,15 @@ export function AssignDialog({ manager }: { manager: ReturnType<typeof usePhoneM
             />
           </div>
           <div className='grid gap-2'>
+            <Label htmlFor='assignDate'>Assignment Date</Label>
+            <Input
+              id='assignDate'
+              type='date'
+              value={assignDate}
+              onChange={(event) => setAssignDate(event.target.value)}
+            />
+          </div>
+          <div className='grid gap-2'>
             <Label htmlFor='assignNotes'>Notes (Optional)</Label>
             <Input
               id='assignNotes'
@@ -73,8 +96,13 @@ export function AssignDialog({ manager }: { manager: ReturnType<typeof usePhoneM
             Cancel
           </Button>
           <Button
-            onClick={() => handleAssign(!selectedPhone && selectedPhones.length > 0)}
-            disabled={!clientName.trim()}
+            onClick={() =>
+              handleAssign(
+                !selectedPhone && selectedPhones.length > 0,
+                assignDate
+              )
+            }
+            disabled={!clientName.trim() || !assignDate}
           >
             Assign
           </Button>

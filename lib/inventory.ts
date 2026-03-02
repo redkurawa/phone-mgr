@@ -890,7 +890,7 @@ export async function bulkUpdatePhones(input: BulkUpdateInput) {
           ELSE ${nextClientName}
         END,
         CASE
-          WHEN ${input.returnDate && input.action === 'deassign'}
+          WHEN ${input.returnDate && (input.action === 'deassign' || input.action === 'assign')}
           THEN TO_TIMESTAMP(${input.returnDate + ' 00:00:00'}, 'YYYY-MM-DD HH24:MI:SS')
           ELSE NOW()
         END,

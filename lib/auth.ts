@@ -202,11 +202,7 @@ export const authOptions: NextAuthOptions = {
         if (!syncedUser) {
           return false;
         }
-        // Allow login only for approved users
-        if (syncedUser.status === 'pending') {
-          console.log('signIn: user is pending, denying login');
-          return false;
-        }
+        // Allow login for all users - middleware will handle pending users
         return true;
       } catch (error: any) {
         console.error('signIn error:', error);

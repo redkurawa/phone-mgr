@@ -14,27 +14,25 @@ async function runReset() {
   const sql = neon(connectionString);
 
   try {
-    // Baca file SQL
     const sqlContent = await fs.readFile('./reset-db.sql', 'utf8');
     console.log('Executing reset script...');
 
-    // Split statements respecting dollar-quoted strings ($$...$$)
     const statements = [];
     let current = '';
     let inDollarQuote = false;
 
-    for (let i = 0; i < sqlContent.length; i++) {
+    for (let i = 0; i < sqlContent.length; i += 1) {
       const char = sqlContent[i];
       const nextChar = sqlContent[i + 1];
 
       if (!inDollarQuote && char === '$' && nextChar === '$') {
         inDollarQuote = true;
         current += '$$';
-        i++; // skip next $
+        i += 1;
       } else if (inDollarQuote && char === '$' && nextChar === '$') {
         inDollarQuote = false;
         current += '$$';
-        i++; // skip next $
+        i += 1;
       } else if (!inDollarQuote && char === ';') {
         if (current.trim()) {
           statements.push(current.trim());
@@ -45,34 +43,27 @@ async function runReset() {
       }
     }
 
-    // Add final statement if exists
     if (current.trim()) {
       statements.push(current.trim());
     }
 
-    for (let i = 0; i < statements.length; i++) {
-      const stmt = statements[i].trim();
-      if (stmt) {
-        console.log(`Executing: ${stmt.substring(0, 50)}...`);
-        await sql(stmt);
-      }
+    for (const statement of statements) {
+      console.log(`Executing: ${statement.substring(0, 60)}...`);
+      await sql(statement);
     }
 
-    console.log('✅ Database reset completed!');
+    console.log('Database reset completed.');
 
-    // Verifikasi
-    const result = await sql('SELECT COUNT(*) as count FROM phone_numbers');
-    console.log('phone_numbers count:', result[0].count);
+    const inventory = await sql('SELECT COUNT(*) AS count FROM phone_inventory');
+    console.log('phone_inventory count:', inventory[0].count);
 
-    const result2 = await sql('SELECT COUNT(*) as count FROM usage_history');
-    console.log('usage_history count:', result2[0].count);
+    const events = await sql('SELECT COUNT(*) AS count FROM phone_events');
+    console.log('phone_events count:', events[0].count);
 
-    const result3 = await sql('SELECT COUNT(*) as count FROM users');
-    console.log('users count:', result3[0].count);
+    const users = await sql('SELECT COUNT(*) AS count FROM app_users');
+    console.log('app_users count:', users[0].count);
   } catch (error) {
-    console.error('❌ Error during reset:', error);
-  } finally {
-    // Tidak perlu close karena neon serverless
+    console.error('Error during reset:', error);
   }
 }
 

@@ -1,95 +1,75 @@
-# Troubleshooting Guide
+# Troubleshooting
 
-## Issue: Tanggal History Salah di Vercel (2018 vs 2026)
+## Login berhasil tetapi tidak bisa masuk
 
-### Symptoms
-- Di localhost: `14 Agu 2018, 07:00`
-- Di Vercel: `27 Feb 2026, 15:49`
-- Database Neon menunjukkan tanggal yang benar (2018)
+Periksa hal berikut:
 
-### Root Cause
-Drizzle ORM caching di Vercel Edge Runtime menyebabkan response API mengembalikan data lama yang ter-cache.
+- konfigurasi Google OAuth benar
+- `NEXTAUTH_URL` dan `NEXTAUTH_SECRET` terisi
+- user pertama setelah reset memang login sebagai admin
+- status user tidak sedang `rejected`
 
-### Steps to Diagnose
+## Database tidak terbaca
 
-1. **Cek database langsung** - Pastikan data di database benar
-   ```bash
-   node --input-type=module -e "
-   import { neon } from '@neondatabase/serverless';
-   const sql = neon('DATABASE_URL');
-   const result = await sql\`SELECT event_date FROM usage_history WHERE phone_id = 'UUID'\`;
-   console.log(JSON.stringify(result, null, 2));
-   "
-   ```
+Penyebab paling umum:
 
-2. **Cek API response langsung** - Buka di browser
-   ```
-   https://phone-db.vercel.app/api/phones/{phoneId}/history
-   ```
+- `DATABASE_URL` belum diisi
+- database belum menjalankan schema terbaru
+- koneksi Neon tidak aktif atau credential salah
 
-3. **Bandingkan dengan debug endpoint** - Buat endpoint debug untuk comparison
-   ```bash
-   # Buat file app/api/debug/route.ts
-   # Testedan endpoint yang sama - kalau hasilnya berbeda, berarti ada caching
-   ```
+Jika perlu, lakukan reset database lalu login ulang.
 
-### Solution
+## Data tidak muncul setelah import
 
-Ganti Drizzle ORM query dengan raw SQL untuk menghindari caching:
+Periksa urutannya:
 
-```typescript
-// Sebelum (tercache)
-const history = await db
-  .select()
-  .from(usageHistory)
-  .where(eq(usageHistory.phoneId, phoneId))
-  .orderBy(usageHistory.eventDate);
+- lakukan preview import terlebih dahulu
+- pastikan jumlah `ready to import` lebih dari nol
+- pastikan data tidak seluruhnya sudah ada di database
+- cek audit trail untuk melihat apakah aksi import tercatat
 
-// Sesudah (raw SQL)
-const historyResult = await db.execute(
-  sql`SELECT id, phone_id, event_type, client_name, event_date, notes 
-       FROM usage_history 
-       WHERE phone_id = ${phoneId}
-       ORDER BY event_date DESC`
-);
+## Hasil search terasa tidak sesuai
 
-const history = historyResult.rows.map((row: any) => ({
-  id: row.id,
-  phoneId: row.phone_id,
-  eventType: row.event_type,
-  clientName: row.client_name,
-  eventDate: row.event_date,
-  notes: row.notes,
-}));
-```
+Search saat ini bekerja terhadap:
 
-### Alternative Solutions
+- nomor telepon
+- client aktif saat ini
+- client yang muncul di riwayat event
 
-1. **Force Node.js runtime** (bukan Edge):
-   ```typescript
-   export const dynamic = 'force-dynamic';
-   export const runtime = 'nodejs';
-   ```
+Jika hasil tampak kosong, cek apakah filter status sedang aktif dan mempersempit hasil.
 
-2. **Cache bust di frontend**:
-   ```typescript
-   fetch(`/api/phones/${phoneId}/history?_=${Date.now()}`, {
-     cache: 'no-store',
-   });
-   ```
+## Bulk action gagal
 
-3. **Redeploy force** - Hapus cache Vercel dan redeploy
+Bulk action hanya akan berhasil bila status data konsisten dengan aksi:
 
-### Places That Might Have Same Issue
+- assign untuk nomor yang masih kosong
+- deassign untuk nomor yang sedang dipakai
+- reassign untuk nomor yang sedang dipakai
 
-Semua endpoint yang pake Drizzle `.select().from()` berpotensi sama. Cek:
-- `/api/phones/[id]/history` - ✅ Fixed
-- `/api/phones/[id]/route.ts` - Perlu dicek
-- `/api/phones/route.ts` - Perlu dicek
-- `/api/phones/block/activation/route.ts` - Perlu dicek
+Jika status campuran, gunakan edit massal atau sesuaikan seleksi terlebih dahulu.
 
-### Prevention
+## Audit trail kosong
 
-- Selalu test di Vercel setelah deployment
-- Monitor edge cases dengan tanggal historis
-- Kalau ada mismatch antara DB dan API, cek Vercel logs
+Audit trail baru akan terisi setelah ada aksi sistem seperti login, import, generate, update user, atau perubahan inventori. Jika database baru di-reset, kondisi kosong adalah normal.
+
+## Backup tidak bisa diunduh
+
+Periksa:
+
+- user yang login adalah admin
+- database bisa diakses
+- endpoint admin tidak terblokir oleh sesi yang tidak valid
+
+Jika halaman admin lain juga gagal dimuat, masalah biasanya ada pada sesi login atau koneksi database.
+
+## Halaman admin tidak bisa diakses
+
+Halaman admin hanya untuk role admin. Jika login berhasil tetapi tetap diarahkan keluar:
+
+- pastikan role user adalah admin
+- cek user management dengan akun admin pertama
+- cek audit trail untuk memastikan perubahan role tercatat
+
+## Setelah reset semua user hilang
+
+Itu perilaku normal. Reset memang menghapus seluruh tabel aplikasi. Solusinya adalah login ulang. Akun pertama yang masuk setelah reset akan menjadi admin otomatis.

@@ -1,158 +1,86 @@
 # Phone Number Manager
 
-Aplikasi manajemen nomor telepon perusahaan dengan fitur bulk generation, assignment, dan pelacakan riwayat lengkap.
+Aplikasi manajemen inventaris nomor telepon perusahaan dengan UI yang dipertahankan, tetapi seluruh logic backend dan data flow telah dibangun ulang agar lebih cepat, lebih stabil, dan lebih mudah diaudit.
+
+## Ringkasan
+
+Aplikasi ini dipakai untuk:
+
+- mengelola inventaris nomor telepon dalam jumlah besar
+- melakukan assign, deassign, reassign, dan edit massal
+- mengimpor nomor dari teks, range, block pattern, atau file CSV/TXT
+- melacak riwayat perubahan per nomor
+- mengelola user dan role berbasis RBAC
+- memantau audit trail, status sistem, dan membuat snapshot backup
+
+## Arsitektur Saat Ini
+
+- Framework: Next.js App Router
+- Database: Neon PostgreSQL
+- Data access: raw SQL terstruktur, tanpa logic ORM lama
+- Authentication: NextAuth dengan Google login
+- Authorization: RBAC admin dan user
+- UI: komponen existing dipertahankan
 
 ## Fitur Utama
 
-- **Bulk Generation**: Generate 100 nomor sekaligus dengan pattern (XX) atau range manual
-- **Assignment/Deassignment**: Kelola assignment nomor ke klien (PT)
-- **Riwayat Lengkap**: Setiap aksi tercatat (aktivasi, assign, deassign, reassign)
-- **Pencarian & Filter**: Cari berdasarkan nomor, prefix, atau nama klien
-- **Bulk Operations**: Assign/deassign banyak nomor sekaligus
-- **Edit**: Edit status dan klien single atau bulk
+- Generate nomor berdasarkan block atau range
+- Import massal sampai 10.000 nomor unik per request
+- Preview import sebelum commit
+- Search dan filter untuk nomor, prefix, dan client
+- Assign, deassign, reassign, dan bulk edit
+- History per nomor
+- Audit trail admin
+- Backup snapshot JSON
+- System status untuk monitoring dasar
+- Keyboard shortcuts untuk aksi umum
 
-## Tech Stack
+## Kebutuhan Environment
 
-- **Framework**: Next.js 14 (App Router)
-- **Database**: Neon (PostgreSQL)
-- **ORM**: Drizzle ORM
-- **UI**: Shadcn UI dengan Stone Theme
-- **Deployment**: Vercel ready
+Gunakan file `.env` aktif di project. Nilai utama yang dibutuhkan:
 
-## Setup
+- `DATABASE_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
 
-### 1. Install Dependencies
+## Menjalankan Project
 
-```bash
-npm install
-```
+1. Install dependency.
+2. Pastikan environment sudah terisi.
+3. Siapkan database dengan menjalankan skema SQL yang ada.
+4. Jalankan mode development.
+5. Verifikasi build sebelum deploy.
 
-### 2. Setup Database
+## Reset Database
 
-1. Buat database di [Neon](https://neon.tech)
-2. Dapatkan connection string dari dashboard
-3. Buat file `.env.local`:
+Reset akan menghapus seluruh data aplikasi saat ini, termasuk user, inventori, event, dan audit log. Setelah reset:
 
-```bash
-DATABASE_URL=your_neon_connection_string
-```
+- login pertama akan menjadi admin
+- user berikutnya akan otomatis approved
 
-4. Jalankan schema SQL di Neon SQL Editor:
+Gunakan script reset yang sudah tersedia di project.
 
-```bash
-# Copy isi schema.sql dan jalankan di Neon dashboard
-```
+## Alur Operasional
 
-### 3. Development
+Untuk admin, alur utama yang tersedia sekarang adalah:
 
-```bash
-npm run dev
-```
+- generate nomor
+- import nomor dan lihat preview sebelum masuk
+- kelola blok, nomor, dan customer
+- lakukan bulk action dari detail block
+- cek audit trail
+- cek system status
+- unduh backup snapshot
 
-Buka [http://localhost:3000](http://localhost:3000)
+## Catatan Penting
 
-### 4. Build & Deploy
+- logic lama berbasis ORM tidak lagi menjadi sumber utama perilaku aplikasi
+- cache dipakai untuk ringkasan yang sering dibaca dan dibersihkan saat ada perubahan data
+- semua operasi penting dicatat ke audit trail
+- bulk operation dijaga tetap konsisten melalui validasi dan jalur service terpusat
 
-```bash
-npm run build
-```
+## Verifikasi
 
-Deploy ke Vercel:
-
-1. Push ke GitHub
-2. Import project di Vercel
-3. Tambahkan environment variable `DATABASE_URL`
-4. Deploy
-
-## Database Setup & Reset
-
-### Setup Database Baru (First Time)
-
-```bash
-npm run db:push
-```
-
-### Reset Database (Bersihkan Semua Data)
-
-⚠️ **Peringatan**: Reset akan menghapus **SEMUA DATA** (nomor telepon, riwayat, dan user)!
-
-```bash
-# 1. Bersihkan database
-node run-reset.js
-
-# 2. Inisialisasi ulang
-npm run db:push
-```
-
-## Penggunaan
-
-### Generate Nomor
-
-1. Klik "Generate Numbers"
-2. Masukkan pattern prefix:
-   - `03612812XX` → 0361281200 - 0361281299 (100 nomor)
-   - `021256179XX` dengan range manual → 02125617900 - 02125617949
-3. Klik "Generate"
-
-### Assign Nomor
-
-**Single:**
-
-1. Klik tombol Check/X di baris nomor
-2. Masukkan nama klien (PT)
-3. Klik "Assign"
-
-**Bulk:**
-
-1. Pilih nomor dengan checkbox
-2. Klik "Bulk Assign"
-3. Masukkan nama klien
-4. Klik "Assign"
-
-### Deassign Nomor
-
-1. Pilih nomor (single atau bulk)
-2. Klik tombol X atau "Deassign All"
-3. Nomor kembali ke status KOSONG
-4. Riwayat tetap tersimpan
-
-### Lihat Riwayat
-
-Klik ikon History (jam) untuk melihat riwayat lengkap nomor:
-
-- Aktivasi (tanggal masuk sistem)
-- Assignment (ke klien mana saja)
-- Deassignment (pengembalian)
-- Reassignment (penugasan ulang)
-
-## Struktur Database
-
-### phone_numbers
-
-- `id`: UUID
-- `number`: String (unique)
-- `current_status`: KOSONG | PAKAI
-- `current_client`: String (nullable)
-- `created_at`, `updated_at`: Timestamp
-
-### usage_history
-
-- `id`: UUID
-- `phone_id`: FK ke phone_numbers
-- `event_type`: ACTIVATION | ASSIGNED | DEASSIGNED | REASSIGNED
-- `client_name`: String (nullable)
-- `event_date`: Timestamp
-- `notes`: String (nullable)
-
-## API Endpoints
-
-- `GET /api/phones` - List dengan filter & pagination
-- `POST /api/phones` - Generate bulk numbers
-- `GET /api/phones/[id]` - Get single with history
-- `PUT /api/phones/[id]` - Update (assign/edit)
-- `DELETE /api/phones/[id]` - Delete
-- `POST /api/phones/bulk` - Bulk operations
-
-## License
-
-MIT
+Sebelum dipakai atau dideploy, pastikan build production berhasil dan login admin dapat mengakses dashboard, user management, audit trail, system status, serta backup snapshot.

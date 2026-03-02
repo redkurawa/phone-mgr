@@ -6,3 +6,9 @@ node_modules
 .DS_Store
 dist
 build
+*.txt
+*.jpg
+*.jpeg
+*.png
+*.gif
+tsconfig.tsbuildinfo

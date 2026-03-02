@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ensureAdminSession } from '@/lib/auth';
-import { listUsers } from '@/lib/inventory';
+import { getSystemOverview } from '@/lib/inventory';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,11 +12,13 @@ export async function GET() {
   }
 
   try {
-    const users = await listUsers();
-    return NextResponse.json({ users }, { headers: { 'Cache-Control': 'no-store' } });
+    const overview = await getSystemOverview();
+    return NextResponse.json(overview, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message ?? 'Failed to fetch users' },
+      { status: 'error', message: error.message ?? 'Failed to load system status' },
       { status: 500 }
     );
   }

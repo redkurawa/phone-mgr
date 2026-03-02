@@ -1,6 +1,12 @@
-import { NextAuthOptions } from 'next-auth';
+import { getServerSession, type NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { neon } from '@neondatabase/serverless';
+import { NextResponse } from 'next/server';
+import {
+  requireDatabase,
+  toJsonPayload,
+  type UserRole,
+  type UserStatus,
+} from '@/lib/db';
 
 declare module 'next-auth' {
   interface Session {
@@ -9,8 +15,8 @@ declare module 'next-auth' {
       email: string;
       name?: string | null;
       image?: string | null;
-      role: 'admin' | 'user';
-      status: 'pending' | 'approved' | 'rejected';
+      role: UserRole;
+      status: UserStatus;
     };
   }
 }
@@ -18,132 +24,259 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
-    role: 'admin' | 'user';
-    status: 'pending' | 'approved' | 'rejected';
+    role: UserRole;
+    status: UserStatus;
     image?: string | null;
   }
+}
+
+async function syncOAuthUser(user: {
+  email?: string | null;
+  name?: string | null;
+  image?: string | null;
+}) {
+  console.log(`syncOAuthUser called for: ${user.email}`);
+  if (!user.email) {
+    console.log('syncOAuthUser: no email provided');
+    return null;
+  }
+
+  try {
+    const sql = requireDatabase();
+    const existingUsers = await sql`
+    SELECT
+      id,
+      role::text AS role,
+      status::text AS status,
+      image
+    FROM app_users
+    WHERE email = ${user.email}
+    LIMIT 1
+  `;
+
+    console.log(`syncOAuthUser: existingUsers found=${!!existingUsers[0]}`);
+    if (existingUsers[0]) {
+      console.log(
+        `syncOAuthUser: updating existing user ${existingUsers[0].id}`
+      );
+      const [updatedUser] = await sql`
+      UPDATE app_users
+      SET
+        name = ${user.name ?? null},
+        image = ${user.image ?? null},
+        last_login_at = NOW(),
+        updated_at = NOW()
+      WHERE email = ${user.email}
+      RETURNING
+        id,
+        role::text AS role,
+        status::text AS status,
+        image
+    `;
+
+      await sql`
+      INSERT INTO audit_logs (action, entity_type, entity_id, actor_user_id, payload)
+      VALUES (
+        'auth.sign-in',
+        'app_user',
+        ${updatedUser.id},
+        ${updatedUser.id},
+        CAST(${toJsonPayload({ email: user.email })} AS jsonb)
+      )
+    `;
+
+      return updatedUser;
+    }
+
+    const [countRow] = await sql`
+    SELECT COUNT(*)::int AS count
+    FROM app_users
+  `;
+
+    const isFirstUser = Number(countRow?.count ?? 0) === 0;
+    const role = isFirstUser ? 'admin' : 'user';
+    const status = isFirstUser ? 'approved' : 'pending';
+    console.log(
+      `Creating new user: ${user.email}, isFirstUser=${isFirstUser}, role=${role}, status=${status}`
+    );
+
+    const [createdUser] = await sql`
+    INSERT INTO app_users (
+      email,
+      name,
+      image,
+      role,
+      status,
+      last_login_at
+    )
+    VALUES (
+      ${user.email},
+      ${user.name ?? null},
+      ${user.image ?? null},
+      ${role}::app_role,
+      ${status}::app_user_status,
+      NOW()
+    )
+    RETURNING
+      id,
+      role::text AS role,
+      status::text AS status,
+      image
+  `;
+
+    await sql`
+    INSERT INTO audit_logs (action, entity_type, entity_id, actor_user_id, payload)
+    VALUES (
+      'auth.register',
+      'app_user',
+      ${createdUser.id},
+      ${createdUser.id},
+      CAST(${toJsonPayload({
+        email: user.email,
+        role,
+        status,
+      })} AS jsonb)
+    )
+  `;
+
+    console.log(
+      `Created user: ${createdUser.id}, status=${createdUser.status}`
+    );
+    return createdUser;
+  } catch (error: any) {
+    console.error('syncOAuthUser error:', error);
+    return null;
+  }
+}
+
+async function loadAppUser(email?: string | null) {
+  console.log(`loadAppUser called for: ${email}`);
+  if (!email) {
+    return null;
+  }
+
+  const sql = requireDatabase();
+  const [user] = await sql`
+    SELECT
+      id,
+      role::text AS role,
+      status::text AS status,
+      image
+    FROM app_users
+    WHERE email = ${email}
+    LIMIT 1
+  `;
+
+  console.log(
+    `loadAppUser result for ${email}:`,
+    user ? `found, status=${user.status}` : 'not found'
+  );
+  return user ?? null;
 }
 
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
     }),
   ],
-  callbacks: {
-    async signIn({ user, account, profile }) {
-      if (!user.email) return false;
-
-      const sql = neon(process.env.DATABASE_URL!);
-
-      // Check if user exists
-      const existingUsers = await sql`
-                SELECT * FROM users WHERE email = ${user.email}
-            `;
-
-      if (existingUsers.length === 0) {
-        // Check if this is the first user (make them admin)
-        const allUsers = await sql`SELECT COUNT(*) as count FROM users`;
-        const count = Number(allUsers[0].count);
-        const isFirstUser = count === 0;
-        console.log('First user check:', {
-          count,
-          isFirstUser,
-          email: user.email,
-        });
-
-        // Create new user
-        await sql`
-                    INSERT INTO users (email, name, image, role, status)
-                    VALUES (${user.email}, ${user.name || null}, ${user.image || null}, ${isFirstUser ? 'admin' : 'user'}, ${isFirstUser ? 'approved' : 'pending'})
-                `;
-        console.log('User created:', {
-          email: user.email,
-          role: isFirstUser ? 'admin' : 'user',
-          status: isFirstUser ? 'approved' : 'pending',
-        });
-      } else {
-        // Update existing user's info
-        await sql`
-                    UPDATE users 
-                    SET name = ${user.name || null}, image = ${user.image || null}, updated_at = NOW()
-                    WHERE email = ${user.email}
-                `;
-        console.log('User updated:', {
-          email: user.email,
-          role: existingUsers[0].role,
-          status: existingUsers[0].status,
-        });
-      }
-
-      return true;
-    },
-
-    async jwt({ token, user, account, trigger, session }) {
-      // Always fetch fresh user data from database
-      const email = user?.email || token.email;
-      if (email) {
-        const sql = neon(process.env.DATABASE_URL!);
-        const users = await sql`
-                    SELECT id, role, status, image FROM users WHERE email = ${email}
-                `;
-
-        if (users.length > 0) {
-          token.id = users[0].id;
-          token.role = users[0].role;
-          token.status = users[0].status;
-          // Use database image, or fallback to OAuth user image (for first login)
-          token.image = users[0].image || user?.image || null;
-          console.log('JWT callback - user data:', {
-            id: users[0].id,
-            role: users[0].role,
-            status: users[0].status,
-            image: token.image,
-          });
-        } else if (user?.image) {
-          // New user - use image directly from OAuth provider
-          token.image = user.image;
-        }
-      }
-      return token;
-    },
-
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.status = token.status;
-        session.user.image = token.image || null;
-      }
-      return session;
-    },
-  },
   pages: {
     signIn: '/login',
     error: '/login',
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
+  },
+  callbacks: {
+    async signIn({ user }) {
+      try {
+        const syncedUser = await syncOAuthUser(user);
+        console.log(
+          'signIn result:',
+          syncedUser ? 'success' : 'failed',
+          'for',
+          user.email
+        );
+        if (!syncedUser) {
+          return false;
+        }
+        // Allow login only for approved users
+        if (syncedUser.status === 'pending') {
+          console.log('signIn: user is pending, denying login');
+          return false;
+        }
+        return true;
+      } catch (error: any) {
+        console.error('signIn error:', error);
+        return false;
+      }
+    },
+    async jwt({ token, user }) {
+      const email = user?.email ?? token.email ?? null;
+      console.log(`JWT callback: email=${email}, hasUser=${!!user}`);
+      const appUser = await loadAppUser(email);
+      if (appUser) {
+        console.log(`JWT: loaded user ${appUser.id}, status=${appUser.status}`);
+        token.id = appUser.id;
+        token.role = appUser.role as UserRole;
+        token.status = appUser.status as UserStatus;
+        token.image = appUser.image ?? user?.image ?? token.image ?? null;
+      } else {
+        console.log(`JWT: no appUser found for ${email}`);
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      console.log(
+        `Session callback: token.status=${token.status}, token.role=${token.role}`
+      );
+      if (session.user && token.email) {
+        session.user.id = token.id;
+        session.user.email = token.email;
+        session.user.role = token.role as UserRole;
+        session.user.status = token.status as UserStatus;
+        session.user.image = token.image ?? null;
+      }
+      return session;
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-// Helper function to check if user is admin
-export async function isAdmin(email: string): Promise<boolean> {
-  const sql = neon(process.env.DATABASE_URL!);
-  const users = await sql`
-    SELECT role FROM users WHERE email = ${email}
-  `;
-  return users.length > 0 && users[0].role === 'admin';
+export async function ensureApprovedSession() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.email) {
+    return {
+      session: null,
+      response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+    };
+  }
+
+  if (session.user.status !== 'approved') {
+    return {
+      session: null,
+      response: NextResponse.json({ error: 'Access revoked' }, { status: 403 }),
+    };
+  }
+
+  return { session, response: null };
 }
 
-// Helper function to check if user is approved
-export async function isApproved(email: string): Promise<boolean> {
-  const sql = neon(process.env.DATABASE_URL!);
-  const users = await sql`
-    SELECT status FROM users WHERE email = ${email}
-  `;
-  return users.length > 0 && users[0].status === 'approved';
+export async function ensureAdminSession() {
+  const approval = await ensureApprovedSession();
+  if (approval.response) {
+    return approval;
+  }
+
+  if (approval.session?.user.role !== 'admin') {
+    return {
+      session: null,
+      response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }),
+    };
+  }
+
+  return approval;
 }

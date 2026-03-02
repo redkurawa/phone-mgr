@@ -11,7 +11,7 @@ interface User {
   name: string | null;
   image: string | null;
   role: 'admin' | 'user';
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'approved' | 'pending' | 'rejected';
   created_at: string;
 }
 
@@ -51,7 +51,7 @@ export default function UserManagementPage() {
 
   const updateUserStatus = async (
     userId: string,
-    newStatus: 'approved' | 'rejected'
+    newStatus: 'approved' | 'pending' | 'rejected'
   ) => {
     try {
       const response = await fetch(`/api/admin/users/${userId}/status`, {
@@ -95,8 +95,8 @@ export default function UserManagementPage() {
     return null;
   }
 
-  const pendingUsers = users.filter((u) => u.status === 'pending');
   const approvedUsers = users.filter((u) => u.status === 'approved');
+  const pendingUsers = users.filter((u) => u.status === 'pending');
   const rejectedUsers = users.filter((u) => u.status === 'rejected');
 
   return (
@@ -111,12 +111,38 @@ export default function UserManagementPage() {
               Manage user accounts and permissions
             </p>
           </div>
-          <button
-            onClick={() => router.push('/')}
-            className='px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50'
-          >
-            Back to Dashboard
-          </button>
+          <div className='flex gap-2'>
+            <button
+              onClick={() => router.push('/admin/system')}
+              className='px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50'
+            >
+              System Status
+            </button>
+            <button
+              onClick={() =>
+                window.open(
+                  '/api/admin/backup',
+                  '_blank',
+                  'noopener,noreferrer'
+                )
+              }
+              className='px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50'
+            >
+              Download Backup
+            </button>
+            <button
+              onClick={() => router.push('/admin/audit')}
+              className='px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50'
+            >
+              Audit Trail
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className='px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50'
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -125,103 +151,16 @@ export default function UserManagementPage() {
           </div>
         )}
 
-        {/* Pending Users */}
-        <div className='mb-8'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center'>
-            <span className='inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 text-sm font-bold mr-2'>
-              {pendingUsers.length}
-            </span>
-            Pending Approval
-          </h2>
-          {pendingUsers.length === 0 ? (
-            <div className='bg-white rounded-lg shadow p-6 text-center text-gray-500'>
-              No pending users
-            </div>
-          ) : (
-            <div className='bg-white rounded-lg shadow overflow-hidden'>
-              <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-gray-50'>
-                  <tr>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      User
-                    </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Email
-                    </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Created
-                    </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className='bg-white divide-y divide-gray-200'>
-                  {pendingUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <div className='flex items-center'>
-                          <div className='h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center'>
-                            {user.image ? (
-                              <img
-                                src={user.image}
-                                alt={user.name || 'User'}
-                                className='h-10 w-10 rounded-full'
-                                referrerPolicy='no-referrer'
-                              />
-                            ) : (
-                              <span className='text-blue-600 font-medium'>
-                                {user.name?.charAt(0).toUpperCase() ||
-                                  user.email.charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <div className='ml-4'>
-                            <div className='text-sm font-medium text-gray-900'>
-                              {user.name || 'No name'}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {user.email}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {formatDate(user.created_at)}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2'>
-                        <button
-                          onClick={() => updateUserStatus(user.id, 'approved')}
-                          className='text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1 rounded-md'
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => updateUserStatus(user.id, 'rejected')}
-                          className='text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md'
-                        >
-                          Reject
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Approved Users */}
         <div className='mb-8'>
           <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center'>
             <span className='inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-sm font-bold mr-2'>
               {approvedUsers.length}
             </span>
-            Approved Users
+            Active Users
           </h2>
           {approvedUsers.length === 0 ? (
             <div className='bg-white rounded-lg shadow p-6 text-center text-gray-500'>
-              No approved users
+              No active users
             </div>
           ) : (
             <div className='bg-white rounded-lg shadow overflow-hidden'>
@@ -314,14 +253,94 @@ export default function UserManagementPage() {
           )}
         </div>
 
-        {/* Rejected Users */}
+        {pendingUsers.length > 0 && (
+          <div className='mb-8'>
+            <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center'>
+              <span className='inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 text-sm font-bold mr-2'>
+                {pendingUsers.length}
+              </span>
+              Pending Approval
+            </h2>
+            <div className='bg-white rounded-lg shadow overflow-hidden'>
+              <table className='min-w-full divide-y divide-gray-200'>
+                <thead className='bg-gray-50'>
+                  <tr>
+                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      User
+                    </th>
+                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      Email
+                    </th>
+                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      Created
+                    </th>
+                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className='bg-white divide-y divide-gray-200'>
+                  {pendingUsers.map((user) => (
+                    <tr key={user.id} className='bg-yellow-50'>
+                      <td className='px-6 py-4 whitespace-nowrap'>
+                        <div className='flex items-center'>
+                          <div className='h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center'>
+                            {user.image ? (
+                              <img
+                                src={user.image}
+                                alt={user.name || 'User'}
+                                className='h-10 w-10 rounded-full'
+                                referrerPolicy='no-referrer'
+                              />
+                            ) : (
+                              <span className='text-yellow-600 font-medium'>
+                                {user.name?.charAt(0).toUpperCase() ||
+                                  user.email.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <div className='ml-4'>
+                            <div className='text-sm font-medium text-gray-900'>
+                              {user.name || 'No name'}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                        {user.email}
+                      </td>
+                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                        {formatDate(user.created_at)}
+                      </td>
+                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+                        <button
+                          onClick={() => updateUserStatus(user.id, 'approved')}
+                          className='text-green-600 hover:text-green-900 mr-4'
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => updateUserStatus(user.id, 'rejected')}
+                          className='text-red-600 hover:text-red-900'
+                        >
+                          Reject
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {rejectedUsers.length > 0 && (
           <div>
             <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center'>
               <span className='inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 text-sm font-bold mr-2'>
                 {rejectedUsers.length}
               </span>
-              Rejected Users
+              Blocked Users
             </h2>
             <div className='bg-white rounded-lg shadow overflow-hidden'>
               <table className='min-w-full divide-y divide-gray-200'>

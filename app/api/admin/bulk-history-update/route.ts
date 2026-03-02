@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
     }
 
     const sql = requireDatabase();
-    const eventDate = new Date(newDate);
+    // Convert date string (YYYY-MM-DD) to datetime string (YYYY-MM-DD 00:00:00+00)
+    const eventDateStr = newDate + ' 00:00:00+00';
+    const eventDate = new Date(eventDateStr);
 
     if (Number.isNaN(eventDate.getTime())) {
       return NextResponse.json(

@@ -893,7 +893,7 @@ export function usePhoneManager() {
       date.getTime() - date.getTimezoneOffset() * 60000
     )
       .toISOString()
-      .slice(0, 16);
+      .slice(0, 10);
     setEditingHistoryDate(formatted);
   };
 
@@ -1068,5 +1068,6 @@ export function usePhoneManager() {
     openBulkEditDialog,
     handleEdit,
     openCustomersView,
+    fetchCustomerPhones,
   };
 }

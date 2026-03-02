@@ -17,7 +17,11 @@ import {
 import { formatDateTimeForHistory } from '@/lib/utils';
 import { Calendar, Check, Edit, User, X } from 'lucide-react';
 
-export function HistoryDialog({ manager }: { manager: ReturnType<typeof usePhoneManager> }) {
+export function HistoryDialog({
+  manager,
+}: {
+  manager: ReturnType<typeof usePhoneManager>;
+}) {
   const {
     historyDialogOpen,
     setHistoryDialogOpen,
@@ -64,14 +68,18 @@ export function HistoryDialog({ manager }: { manager: ReturnType<typeof usePhone
               {editingHistoryId === entry.id ? (
                 <div className='flex items-center gap-2 flex-shrink-0'>
                   <Input
-                    type='datetime-local'
+                    type='date'
                     value={editingHistoryDate}
-                    onChange={(event) => setEditingHistoryDate(event.target.value)}
+                    onChange={(event) =>
+                      setEditingHistoryDate(event.target.value)
+                    }
                     className='w-auto'
                   />
                   <Button
                     size='sm'
-                    onClick={() => updateHistoryDate(entry.id, editingHistoryDate)}
+                    onClick={() =>
+                      updateHistoryDate(entry.id, editingHistoryDate)
+                    }
                   >
                     <Check className='h-4 w-4' />
                   </Button>
@@ -97,7 +105,9 @@ export function HistoryDialog({ manager }: { manager: ReturnType<typeof usePhone
                       variant='ghost'
                       size='icon'
                       className='h-6 w-6 flex-shrink-0'
-                      onClick={() => startEditHistoryDate(entry.id, entry.eventDate)}
+                      onClick={() =>
+                        startEditHistoryDate(entry.id, entry.eventDate)
+                      }
                     >
                       <Edit className='h-3 w-3' />
                     </Button>
@@ -107,7 +117,9 @@ export function HistoryDialog({ manager }: { manager: ReturnType<typeof usePhone
             </div>
           ))}
           {(!selectedPhone?.history || selectedPhone.history.length === 0) && (
-            <p className='text-center text-muted-foreground'>No history available</p>
+            <p className='text-center text-muted-foreground'>
+              No history available
+            </p>
           )}
         </div>
       </DialogContent>

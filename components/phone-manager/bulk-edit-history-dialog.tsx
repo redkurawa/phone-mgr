@@ -106,7 +106,7 @@ export function BulkEditHistoryDialog({
             <Label htmlFor='newDate'>New Assignment Date</Label>
             <Input
               id='newDate'
-              type='datetime-local'
+              type='date'
               value={newDate}
               onChange={(e) => setNewDate(e.target.value)}
             />

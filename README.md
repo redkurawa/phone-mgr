@@ -29,11 +29,13 @@ Aplikasi ini dipakai untuk:
 - Preview import sebelum commit
 - Search dan filter untuk nomor, prefix, dan client
 - Assign, deassign, reassign, dan bulk edit
-- History per nomor
+- **Bulk deassign customers dengan pilihan tanggal pengembalian**
+- History per nomor dengan timezone GMT+7
 - Audit trail admin
 - Backup snapshot JSON
 - System status untuk monitoring dasar
 - Keyboard shortcuts untuk aksi umum
+- **Management customer dengan view dedicated**
 
 ## Kebutuhan Environment
 

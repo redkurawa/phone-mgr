@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils';
 import { usePhoneManager } from '@/hooks/use-phone-manager';
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar, Undo2 } from 'lucide-react';
 import { BulkEditHistoryDialog } from './bulk-edit-history-dialog';
+import { BulkDeassignDialog } from './bulk-deassign-dialog';
 
 export function CustomerViews({
   manager,
@@ -22,10 +23,12 @@ export function CustomerViews({
     setViewMode,
     handleCustomerClick,
     handleBackToCustomers,
+    fetchCustomerPhones,
   } = manager;
 
   const [selectedPhones, setSelectedPhones] = useState<string[]>([]);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkDeassignOpen, setBulkDeassignOpen] = useState(false);
 
   if (viewMode === 'customers') {
     return (
@@ -137,6 +140,14 @@ export function CustomerViews({
               Clear
             </Button>
             <Button
+              variant='destructive'
+              size='sm'
+              onClick={() => setBulkDeassignOpen(true)}
+            >
+              <Undo2 className='h-4 w-4 mr-2' />
+              Deassign
+            </Button>
+            <Button
               variant='default'
               size='sm'
               onClick={() => setBulkEditOpen(true)}
@@ -154,6 +165,21 @@ export function CustomerViews({
         selectedPhones={selectedPhones}
         clientName={selectedCustomer?.clientName || ''}
         onSuccess={clearSelection}
+      />
+      <BulkDeassignDialog
+        open={bulkDeassignOpen}
+        onOpenChange={setBulkDeassignOpen}
+        selectedPhones={selectedPhones}
+        selectedPhoneNumbers={customerPhones
+          .filter((p) => selectedPhones.includes(p.id))
+          .map((p) => ({ id: p.id, number: p.number }))}
+        clientName={selectedCustomer?.clientName || ''}
+        onSuccess={() => {
+          clearSelection();
+          if (selectedCustomer) {
+            fetchCustomerPhones(selectedCustomer.clientName);
+          }
+        }}
       />
       {customerPhones.length > 0 && (
         <div className='flex items-center gap-2 mb-3 px-3'>

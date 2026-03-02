@@ -61,11 +61,15 @@ export function PhoneManagerPage() {
       <div className='container mx-auto py-8 px-4'>
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8'>
           <div>
-            <h1 className='text-3xl font-bold tracking-tight'>
+            <h1
+              className='text-3xl font-bold tracking-tight cursor-pointer hover:text-primary transition-colors'
+              onClick={() => (window.location.href = '/')}
+            >
               Phone Number Manager
             </h1>
             <p className='text-muted-foreground mt-1'>
-              Manage your phone number inventory ({total.toLocaleString()} total)
+              Manage your phone number inventory ({total.toLocaleString()}{' '}
+              total)
             </p>
           </div>
           <div className='flex flex-wrap gap-2 items-center'>
@@ -83,7 +87,10 @@ export function PhoneManagerPage() {
                   <Plus className='mr-2 h-4 w-4' />
                   Numbers
                 </Button>
-                <Button variant='outline' onClick={() => setImportDialogOpen(true)}>
+                <Button
+                  variant='outline'
+                  onClick={() => setImportDialogOpen(true)}
+                >
                   <Download className='mr-2 h-4 w-4' />
                   Import
                 </Button>
@@ -188,7 +195,10 @@ export function PhoneManagerPage() {
               </button>
             )}
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilterAndRefresh}>
+          <Select
+            value={statusFilter}
+            onValueChange={setStatusFilterAndRefresh}
+          >
             <SelectTrigger className='w-full sm:w-[180px]'>
               <SelectValue placeholder='Filter by status' />
             </SelectTrigger>
@@ -215,11 +225,20 @@ export function PhoneManagerPage() {
         )}
 
         <div className='mt-2 text-xs text-muted-foreground'>
-          Shortcuts: Ctrl/Cmd+K search, G generate, I import, U customers, Esc close.
+          Shortcuts: Ctrl/Cmd+K search, G generate, I import, U customers, Esc
+          close.
         </div>
 
-        <GenerateNumbersDialog manager={manager} open={generateDialogOpen} onOpenChange={setGenerateDialogOpen} />
-        <ImportNumbersDialog manager={manager} open={importDialogOpen} onOpenChange={setImportDialogOpen} />
+        <GenerateNumbersDialog
+          manager={manager}
+          open={generateDialogOpen}
+          onOpenChange={setGenerateDialogOpen}
+        />
+        <ImportNumbersDialog
+          manager={manager}
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+        />
         <HistoryDialog manager={manager} />
         <EditDialog manager={manager} />
         <ActivationDialog manager={manager} />

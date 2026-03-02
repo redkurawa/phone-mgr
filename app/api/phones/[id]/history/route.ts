@@ -52,10 +52,13 @@ export async function PUT(
       );
     }
 
+    // Convert date string (YYYY-MM-DD) to datetime string (YYYY-MM-DD 00:00:00+00)
+    const eventDateStr = body.eventDate + ' 00:00:00+00';
+
     await updateHistoryEventDate({
       phoneId: params.id,
       historyId: body.historyId,
-      eventDate: body.eventDate,
+      eventDate: eventDateStr,
       actorUserId: auth.session!.user.id,
     });
 

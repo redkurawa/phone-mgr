@@ -43,6 +43,7 @@ type BulkUpdateInput = {
   action: BulkAction;
   clientName?: string;
   notes?: string;
+  returnDate?: string;
   actorUserId: string;
 };
 
@@ -338,6 +339,7 @@ export async function listCustomerPhones(clientName: string) {
       FROM phone_events pe
       INNER JOIN phone_inventory pi ON pi.id = pe.phone_id
       WHERE pe.client_name = ${normalizedClientName}
+        AND pe.event_type = 'DEASSIGNED'
         AND COALESCE(pi.current_client_name, '') <> ${normalizedClientName}
       ORDER BY pe.phone_id, pe.event_at DESC
     )
@@ -827,6 +829,11 @@ export async function bulkUpdatePhones(input: BulkUpdateInput) {
   const nextClientName =
     input.action === 'deassign' ? null : normalizedClientName;
   const actionSet = jsonArrayToUuidSet(ids);
+  // DEBUG: Log timestamp value
+  console.log('[DEBUG] bulkUpdatePhones:', {
+    action: input.action,
+    returnDate: input.returnDate,
+  });
 
   const result = await sql`
     WITH selected AS (
@@ -882,7 +889,11 @@ export async function bulkUpdatePhones(input: BulkUpdateInput) {
           WHEN ${input.action} = 'deassign' THEN s.current_client_name
           ELSE ${nextClientName}
         END,
-        NOW(),
+        CASE
+          WHEN ${input.returnDate && input.action === 'deassign'}
+          THEN TO_TIMESTAMP(${input.returnDate + ' 00:00:00'}, 'YYYY-MM-DD HH24:MI:SS')
+          ELSE NOW()
+        END,
         ${input.actorUserId},
         ${note}
       FROM selected s
@@ -904,6 +915,7 @@ export async function bulkUpdatePhones(input: BulkUpdateInput) {
           action: input.action,
           clientName: nextClientName,
           note,
+          returnDate: input.returnDate,
         })} AS jsonb)
       )
     )

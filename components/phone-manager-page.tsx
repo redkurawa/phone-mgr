@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { usePhoneManager } from '@/hooks/use-phone-manager';
 import {
+  AlertTriangle,
   ClipboardList,
   Download,
   LogOut,
@@ -32,6 +33,7 @@ import { DeassignDialog } from '@/components/phone-manager/deassign-dialog';
 import { ReassignDialog } from '@/components/phone-manager/reassign-dialog';
 import { CustomerViews } from '@/components/phone-manager/customer-views';
 import { ImportNumbersDialog } from '@/components/phone-manager/import-numbers-dialog';
+import { SilentDeassignDialog } from '@/components/phone-manager/silent-deassign-dialog';
 
 export function PhoneManagerPage() {
   const manager = usePhoneManager();
@@ -48,6 +50,8 @@ export function PhoneManagerPage() {
     setImportDialogOpen,
     userDropdownOpen,
     setUserDropdownOpen,
+    silentDeassignDialogOpen,
+    setSilentDeassignDialogOpen,
     total,
     search,
     statusFilter,
@@ -160,6 +164,16 @@ export function PhoneManagerPage() {
                         <ClipboardList className='h-4 w-4' />
                         Audit Trail
                       </button>
+                      <button
+                        onClick={() => {
+                          setSilentDeassignDialogOpen(true);
+                          setUserDropdownOpen(false);
+                        }}
+                        className='w-full px-4 py-2 text-left text-sm hover:bg-muted flex items-center gap-2 text-amber-600'
+                      >
+                        <AlertTriangle className='h-4 w-4' />
+                        Silent Deassign
+                      </button>
                     </>
                   )}
                   <button
@@ -245,6 +259,11 @@ export function PhoneManagerPage() {
         <AssignDialog manager={manager} />
         <DeassignDialog manager={manager} />
         <ReassignDialog manager={manager} />
+        <SilentDeassignDialog
+          open={silentDeassignDialogOpen}
+          onOpenChange={setSilentDeassignDialogOpen}
+          onSuccess={() => manager.fetchBlocks()}
+        />
       </div>
     </div>
   );

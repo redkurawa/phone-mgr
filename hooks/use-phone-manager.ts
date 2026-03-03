@@ -135,6 +135,8 @@ export function usePhoneManager() {
     useState<PhoneBlock | null>(null);
   const [newActivationDate, setNewActivationDate] = useState('');
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [silentDeassignDialogOpen, setSilentDeassignDialogOpen] =
+    useState(false);
   const [bulkData, setBulkData] = useState<BulkGenerateData>({ prefix: '' });
   const [importText, setImportText] = useState('');
   const [lastImportSummary, setLastImportSummary] = useState<{
@@ -901,6 +903,38 @@ export function usePhoneManager() {
     setEditingHistoryDate(formatted);
   };
 
+  const deleteHistory = async (historyId: string) => {
+    try {
+      if (!selectedPhone) return;
+
+      await readJson(
+        await fetch(`/api/admin/history/${historyId}`, {
+          method: 'DELETE',
+        })
+      );
+
+      toast({
+        title: 'Success',
+        description: 'History entry deleted successfully',
+        variant: 'success',
+      });
+
+      setSelectedPhone((previous) => {
+        if (!previous) return null;
+        const updatedHistory = previous.history.filter(
+          (entry) => entry.id !== historyId
+        );
+        return { ...previous, history: updatedHistory };
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete history entry',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const openEditDialog = (phone: PhoneNumber) => {
     setSelectedPhone(phone);
     setEditClientName(phone.currentClient || '');
@@ -1020,6 +1054,8 @@ export function usePhoneManager() {
     setNewActivationDate,
     userDropdownOpen,
     setUserDropdownOpen,
+    silentDeassignDialogOpen,
+    setSilentDeassignDialogOpen,
     bulkData,
     setBulkData,
     importText,
@@ -1068,10 +1104,12 @@ export function usePhoneManager() {
     openHistoryDialog,
     updateHistoryDate,
     startEditHistoryDate,
+    deleteHistory,
     openEditDialog,
     openBulkEditDialog,
     handleEdit,
     openCustomersView,
     fetchCustomerPhones,
+    fetchBlocks,
   };
 }

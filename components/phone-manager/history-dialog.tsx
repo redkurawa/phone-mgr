@@ -15,7 +15,7 @@ import {
   usePhoneManager,
 } from '@/hooks/use-phone-manager';
 import { formatDateTimeForHistory } from '@/lib/utils';
-import { Calendar, Check, Edit, User, X } from 'lucide-react';
+import { Calendar, Check, Edit, Trash2, User, X } from 'lucide-react';
 
 export function HistoryDialog({
   manager,
@@ -33,6 +33,7 @@ export function HistoryDialog({
     isAdmin,
     updateHistoryDate,
     startEditHistoryDate,
+    deleteHistory,
   } = manager;
 
   return (
@@ -101,16 +102,34 @@ export function HistoryDialog({
                     {formatDateTimeForHistory(entry.eventDate)}
                   </span>
                   {isAdmin && (
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='h-6 w-6 flex-shrink-0'
-                      onClick={() =>
-                        startEditHistoryDate(entry.id, entry.eventDate)
-                      }
-                    >
-                      <Edit className='h-3 w-3' />
-                    </Button>
+                    <>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-6 w-6 flex-shrink-0'
+                        onClick={() =>
+                          startEditHistoryDate(entry.id, entry.eventDate)
+                        }
+                      >
+                        <Edit className='h-3 w-3' />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-6 w-6 flex-shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50'
+                        onClick={() => {
+                          if (
+                            confirm(
+                              'Are you sure you want to delete this history entry?'
+                            )
+                          ) {
+                            deleteHistory(entry.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className='h-3 w-3' />
+                      </Button>
+                    </>
                   )}
                 </div>
               )}

@@ -39,6 +39,8 @@ Aplikasi ini dipakai untuk:
 - Keyboard shortcuts untuk aksi umum
 - **Management customer dengan view dedicated**
 - **User approval workflow** (first user = admin, subsequent users = pending approval)
+- **Silent Deassign** (admin only) - hapus assignment dan history sekaligus untuk kasus kelebihan input
+- **Delete Individual History** (admin only) - hapus entry history tertentu dari detail nomor
 
 ## Kebutuhan Environment
 

@@ -645,18 +645,22 @@ export function usePhoneManager() {
     }
   };
 
-  const handleDeassign = async (isBulk = false) => {
+  const handleDeassign = async (isBulk = false, returnDate?: string) => {
     try {
       const ids = isBulk ? selectedPhones : [selectedPhone?.id];
+      const body: any = {
+        ids,
+        action: 'deassign',
+        notes: assignNotes,
+      };
+      if (returnDate) {
+        body.returnDate = returnDate;
+      }
       const data = await readJson(
         await fetch('/api/phones/bulk', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ids,
-            action: 'deassign',
-            notes: assignNotes,
-          }),
+          body: JSON.stringify(body),
         })
       );
 

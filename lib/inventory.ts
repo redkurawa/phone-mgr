@@ -829,10 +829,18 @@ export async function bulkUpdatePhones(input: BulkUpdateInput) {
   const nextClientName =
     input.action === 'deassign' ? null : normalizedClientName;
   const actionSet = jsonArrayToUuidSet(ids);
+  const shouldUseReturnDate =
+    input.returnDate &&
+    (input.action === 'deassign' || input.action === 'assign');
+  const eventTimestamp = shouldUseReturnDate
+    ? input.returnDate + ' 00:00:00'
+    : '';
   // DEBUG: Log timestamp value
   console.log('[DEBUG] bulkUpdatePhones:', {
     action: input.action,
     returnDate: input.returnDate,
+    shouldUseReturnDate,
+    eventTimestamp,
   });
 
   const result = await sql`
@@ -889,11 +897,10 @@ export async function bulkUpdatePhones(input: BulkUpdateInput) {
           WHEN ${input.action} = 'deassign' THEN s.current_client_name
           ELSE ${nextClientName}
         END,
-        CASE
-          WHEN ${input.returnDate && (input.action === 'deassign' || input.action === 'assign')}
-          THEN TO_TIMESTAMP(${input.returnDate + ' 00:00:00'}, 'YYYY-MM-DD HH24:MI:SS')
-          ELSE NOW()
-        END,
+        COALESCE(
+          TO_TIMESTAMP(NULLIF(${eventTimestamp}, ''), 'YYYY-MM-DD HH24:MI:SS'),
+          NOW()
+        ),
         ${input.actorUserId},
         ${note}
       FROM selected s

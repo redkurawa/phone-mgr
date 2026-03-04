@@ -20,11 +20,19 @@ export function CustomerViews({
     customers,
     customerPhones,
     selectedCustomer,
+    search,
     setViewMode,
     handleCustomerClick,
     handleBackToCustomers,
     fetchCustomerPhones,
   } = manager;
+
+  // Filter customers based on search input (min 1 char for responsiveness)
+  const filteredCustomers = search.trim()
+    ? customers.filter((customer) =>
+        customer.clientName.toLowerCase().includes(search.toLowerCase().trim())
+      )
+    : customers;
 
   const [selectedPhones, setSelectedPhones] = useState<string[]>([]);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
@@ -52,13 +60,15 @@ export function CustomerViews({
               />
             ))}
           </div>
-        ) : customers.length === 0 ? (
+        ) : filteredCustomers.length === 0 ? (
           <div className='text-center py-12 text-muted-foreground'>
-            No customers found.
+            {search.trim()
+              ? 'No customers match your search.'
+              : 'No customers found.'}
           </div>
         ) : (
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-            {customers.map((customer) => (
+            {filteredCustomers.map((customer) => (
               <div
                 key={customer.clientName}
                 onClick={() => handleCustomerClick(customer)}

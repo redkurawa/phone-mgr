@@ -292,7 +292,10 @@ export function usePhoneManager() {
   );
 
   useEffect(() => {
-    if (viewMode === 'blocks' && deferredSearch.trim()) {
+    if (
+      (viewMode === 'blocks' || viewMode === 'detail') &&
+      deferredSearch.trim()
+    ) {
       fetchPhones();
     }
   }, [deferredSearch, fetchPhones, viewMode]);

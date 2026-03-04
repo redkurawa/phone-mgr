@@ -194,7 +194,11 @@ export function PhoneManagerPage() {
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
             <Input
               id='inventory-search'
-              placeholder='Search by number, prefix, or client name...'
+              placeholder={
+                viewMode === 'customers' || viewMode === 'customer-detail'
+                  ? 'Search customer by name (min 2 chars)...'
+                  : 'Search by number, prefix, or client name...'
+              }
               value={search}
               onChange={(event) => setSearchAndReset(event.target.value)}
               className='pl-10 pr-10'

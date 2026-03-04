@@ -27,7 +27,7 @@ Aplikasi ini dipakai untuk:
 - Generate nomor berdasarkan block atau range
 - Import massal sampai 10.000 nomor unik per request
 - Preview import sebelum commit
-- Search dan filter untuk nomor, prefix, dan client
+- Search dan filter untuk nomor, prefix, dan client (berfungsi di semua view termasuk customer view, minimal 2 karakter)
 - Assign, deassign, reassign, dan bulk edit
 - **Assignment date picker (bisa backdate)**
 - **Bulk deassign customers dengan pilihan tanggal pengembalian**
